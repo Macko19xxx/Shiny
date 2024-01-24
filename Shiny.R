@@ -131,6 +131,11 @@ server <- function(input, output, session) {
       # Na przykład, jeśli masz funkcję calculate_data() w innym skrypcie, możesz ją teraz wywołać
       # calculate_data()
       
+      # Sprawdź, czy obiekt o nazwie "XXX" istnieje i jeśli tak, wyświetl go
+      if (exists("XXX")) {
+        print(XXX)
+      }
+      
       # Ukrycie okna dialogowego po wykonaniu obliczeń
       removeModal()
     })
