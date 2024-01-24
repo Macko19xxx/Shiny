@@ -30,43 +30,43 @@ generate_results_and_plots <- function(category) {
     data <- NULL
     results <- NULL
   }
-  
+
   # Generowanie wykresu słupkowego
   bar_plot <- ggplot(data, aes(x = Variable, y = Value)) +
     geom_bar(stat = "identity", fill = "skyblue") +
     labs(title = "Bar Plot", x = "Variable", y = "Value")
-  
+
   # Generowanie wykresu punktowego
   scatter_plot <- ggplot(data, aes(x = Variable, y = Value)) +
     geom_point(color = "orange") +
     labs(title = "Scatter Plot", x = "Variable", y = "Value")
-  
+
   return(list(results, bar_plot, scatter_plot))
 }
 
 # Definicja interfejsu Shiny
 ui <- fluidPage(
   titlePanel("Data Quality Explorer"),
-  
+
   sidebarLayout(
     sidebarPanel(
       # Przyciski do wyboru kategorii
       radioButtons("category", "Choose a category:",
                    choices = c("Category A", "Category B"),
                    selected = "Category A"),
-      
+
       # Przycisk do rozpoczęcia obliczeń
       actionButton("startButton", "Start Calculations")
     ),
-    
+
     mainPanel(
       # Wyświetlanie wyników
       verbatimTextOutput("resultsOutput"),
-      
+
       # Wyświetlanie wykresów
       plotOutput("barPlot"),
       plotOutput("scatterPlot"),
-      
+
       # Wyświetlanie tabeli z wynikami
       tableOutput("resultTable"),
       # Opis tabeli
@@ -83,20 +83,20 @@ server <- function(input, output, session) {
     results_and_plots <- generate_results_and_plots(category)
     return(results_and_plots[[1]])
   })
-  
+
   # Wyświetlanie wykresów
   output$barPlot <- renderPlot({
     category <- input$category
     results_and_plots <- generate_results_and_plots(category)
     print(results_and_plots[[2]])
   })
-  
+
   output$scatterPlot <- renderPlot({
     category <- input$category
     results_and_plots <- generate_results_and_plots(category)
     print(results_and_plots[[3]])
   })
-  
+
   # Wyświetlanie tabeli z wynikami
   output$resultTable <- renderTable({
     category <- input$category
@@ -104,7 +104,7 @@ server <- function(input, output, session) {
     data.frame(Variable = c("Result 1", "Result 2", "Result 3"),
                Value = results_and_plots[[1]])
   })
-  
+
   # Obsługa przycisku do rozpoczęcia obliczeń
   observeEvent(input$startButton, {
     # Okno dialogowe do wprowadzenia ścieżki do skryptu
@@ -115,27 +115,29 @@ server <- function(input, output, session) {
         actionButton("confirmScriptPath", "Confirm", class = "btn-primary")
       )
     )
-    
+
     # Wyświetlenie okna dialogowego
     showModal(path)
-    
+
     # Obsługa naciśnięcia przycisku "Confirm"
     observeEvent(input$confirmScriptPath, {
       # Pobranie wprowadzonej ścieżki
       script_path <- input$scriptPath
-      
+
       # Wczytanie kodu z innego skryptu
       source(script_path, local = TRUE)
-      
+
       # Dodaj kod z innego skryptu, który chcesz uruchomić po naciśnięciu przycisku
       # Na przykład, jeśli masz funkcję calculate_data() w innym skrypcie, możesz ją teraz wywołać
       # calculate_data()
-      
-      # Sprawdź, czy obiekt o nazwie "XXX" istnieje i jeśli tak, wyświetl go
+
+      # Sprawdź, czy obiekt o nazwie "XXX" istnieje i jeśli tak, wyświetl go w tabeli
       if (exists("XXX")) {
-        print(XXX)
+        output$resultTable <- renderTable({
+          XXX
+        })
       }
-      
+
       # Ukrycie okna dialogowego po wykonaniu obliczeń
       removeModal()
     })
