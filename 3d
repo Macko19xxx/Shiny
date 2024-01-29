@@ -1,0 +1,53 @@
+dane_3d <- data.frame(
+  ID = c("Punkt1", "Punkt2", "Punkt3", "Punkt4", "Punkt5"),
+  X = c(1, 2, 3, 4, 5),
+  Y = c(5, 4, 3, 2, 1),
+  Z = c(1, 0, 1, 0, 1)  # Zmienna binarna
+)
+
+# Definicja interfejsu Shiny
+ui <- fluidPage(
+  titlePanel("Wizualizacja danych 3D z ID punktów i zmienną binarną"),
+  sidebarLayout(
+    sidebarPanel(),
+    mainPanel(
+      plotlyOutput("wykres_3d"),
+      DTOutput("tabela_danych")
+    )
+  )
+)
+
+# Definicja serwera Shiny
+server <- function(input, output) {
+  
+  # Dane do interakcji z tabelą
+  dane_interaktywne <- reactiveVal()
+  
+  # Tworzenie interaktywnego wykresu 3D
+  output$wykres_3d <- renderPlotly({
+    plot_ly(
+      data = dane_3d,
+      x = ~X,
+      y = ~Y,
+      z = ~Z,
+      text = ~paste("ID: ", ID, "<br>Z (binarna): ", Z),
+      type = "scatter3d",
+      mode = "markers",
+      marker = list(color = ~Z, colorscale = "Viridis")
+    )
+  })
+  
+  # Reakcja na kliknięcie punktu
+  observeEvent(event_data("plotly_click", source = "wykres_3d"), {
+    punkt_klikniety <- event_data("plotly_click", source = "wykres_3d")$pointNumber + 1
+    dane_interaktywne(dane_3d[punkt_klikniety, , drop = FALSE])
+  })
+  
+  # Wyświetlanie tabeli z danymi punktu
+  output$tabela_danych <- renderDT({
+    dane_interaktywne()
+  })
+}
+
+# Uruchomienie aplikacji Shiny
+shinyApp(ui, server)
