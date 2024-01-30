@@ -1,10 +1,9 @@
 library(shiny)
 library(plotly)
 library(DT)
-
+nazwa <- LETTERS[1:10]
 # Tworzenie bazy danych 6-wymiarowej z 10 rekordami (wszystkie kolumny numeryczne)
 baza_danych <- data.frame(
-  NazwaKlienta = c("Klient1", "Klient2", "Klient3", "Klient4", "Klient5", "Klient6", "Klient7", "Klient8", "Klient9", "Klient10"),
   Kolumna1 = runif(10),
   Kolumna2 = rnorm(10),
   Kolumna3 = rnorm(10),
@@ -33,17 +32,14 @@ ui <- fluidPage(
   titlePanel("Wizualizacja danych 3D"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("wybor_x", "Wybierz oś X:", names(baza_danych[2:7])),
-      selectInput("wybor_y", "Wybierz oś Y:", names(baza_danych[2:7])),
-      selectInput("wybor_z", "Wybierz oś Z:", names(baza_danych[2:7])),
-      selectInput("kolor", "Kolor:", names(baza_danych[2:7]))
+      selectInput("wybor_x", "Wybierz oś X:", names(baza_danych)),
+      selectInput("wybor_y", "Wybierz oś Y:", names(baza_danych)),
+      selectInput("wybor_z", "Wybierz oś Z:", names(baza_danych)),
+      selectInput("kolor", "Kolor:", names(baza_danych))
     ),
     mainPanel(
       plotlyOutput("wykres"),
-      div(
-        id = "tabela_specyfikacja",
-        style = "overflow-y: auto; max-height: 200px;"
-      )
+      htmlOutput("tabela_specyfikacja")
     )
   )
 )
@@ -85,12 +81,13 @@ server <- function(input, output) {
     # Wyświetlanie specyfikacji w jednej kolumnie
     output$tabela_specyfikacja <- renderUI({
       specyfikacja <- tibble::tibble(
-        "Kolumna1" = baza_danych[punkt_info$pointNumber, "Kolumna1"],
-        "Kolumna2" = baza_danych[punkt_info$pointNumber, "Kolumna2"],
-        "Kolumna3" = baza_danych[punkt_info$pointNumber, "Kolumna3"],
-        "Kolumna4" = baza_danych[punkt_info$pointNumber, "Kolumna4"],
-        "Kolumna5" = baza_danych[punkt_info$pointNumber, "Kolumna5"],
-        "Kolumna6" = baza_danych[punkt_info$pointNumber, "Kolumna6"]
+        NAZWA = nazwa[punkt_info$pointNumber],
+        Kolumna1 = baza_danych[punkt_info$pointNumber, "Kolumna1"],
+        Kolumna2 = baza_danych[punkt_info$pointNumber, "Kolumna2"],
+        Kolumna3 = baza_danych[punkt_info$pointNumber, "Kolumna3"],
+        Kolumna4 = baza_danych[punkt_info$pointNumber, "Kolumna4"],
+        Kolumna5 = baza_danych[punkt_info$pointNumber, "Kolumna5"],
+        Kolumna6 = baza_danych[punkt_info$pointNumber, "Kolumna6"]
       )
       
       # Formatowanie specyfikacji do postaci jednej kolumny
