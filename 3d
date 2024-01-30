@@ -1,51 +1,101 @@
-dane_3d <- data.frame(
-  ID = c("Punkt1", "Punkt2", "Punkt3", "Punkt4", "Punkt5"),
-  X = c(1, 2, 3, 4, 5),
-  Y = c(5, 4, 3, 2, 1),
-  Z = c(1, 0, 1, 0, 1)  # Zmienna binarna
+library(shiny)
+library(plotly)
+library(DT)
+
+# Tworzenie bazy danych 6-wymiarowej z 10 rekordami (wszystkie kolumny numeryczne)
+baza_danych <- data.frame(
+  Kolumna1 = runif(10),
+  Kolumna2 = rnorm(10),
+  Kolumna3 = rnorm(10),
+  Kolumna4 = sample(0:1, 10, replace = TRUE),  # Kolumna 4 jako binarna
+  Kolumna5 = rnorm(10),
+  Kolumna6 = sample(0:1, 10, replace = TRUE)   # Nowa kolumna binarna
 )
+
+# Nadanie nazwom wierszy identyfikatorów
+rownames(baza_danych) <- paste0("Rekord", 1:10)
+
+# Funkcja do tworzenia etykiet
+create_labels <- function(data, x, y, z, color) {
+  paste0(
+    "Kolumna1: ", data[, x], "<br>",
+    "Kolumna2: ", data[, y], "<br>",
+    "Kolumna3: ", data[, z], "<br>",
+    "Kolumna4: ", data[, color],
+    "Kolumna5: ", data[, "Kolumna5"],
+    "Kolumna6: ", data[, "Kolumna6"]
+  )
+}
 
 # Definicja interfejsu Shiny
 ui <- fluidPage(
-  titlePanel("Wizualizacja danych 3D z ID punktów i zmienną binarną"),
+  titlePanel("Wizualizacja danych 3D"),
   sidebarLayout(
-    sidebarPanel(),
+    sidebarPanel(
+      selectInput("wybor_x", "Wybierz oś X:", names(baza_danych)),
+      selectInput("wybor_y", "Wybierz oś Y:", names(baza_danych)),
+      selectInput("wybor_z", "Wybierz oś Z:", names(baza_danych)),
+      selectInput("kolor", "Kolor:", names(baza_danych))
+    ),
     mainPanel(
-      plotlyOutput("wykres_3d"),
-      DTOutput("tabela_danych")
+      plotlyOutput("wykres"),
+      htmlOutput("tabela_specyfikacja")
     )
   )
 )
 
 # Definicja serwera Shiny
 server <- function(input, output) {
-  
-  # Dane do interakcji z tabelą
-  dane_interaktywne <- reactiveVal()
-  
-  # Tworzenie interaktywnego wykresu 3D
-  output$wykres_3d <- renderPlotly({
-    plot_ly(
-      data = dane_3d,
-      x = ~X,
-      y = ~Y,
-      z = ~Z,
-      text = ~paste("ID: ", ID, "<br>Z (binarna): ", Z),
+  output$wykres <- renderPlotly({
+    # Wykres 3D
+    p <- plot_ly(
+      data = baza_danych,
+      x = ~baza_danych[, input$wybor_x],
+      y = ~baza_danych[, input$wybor_y],
+      z = ~baza_danych[, input$wybor_z],
+      color = ~baza_danych[, input$kolor],  # Kolumna do kolorowania
       type = "scatter3d",
       mode = "markers",
-      marker = list(color = ~Z, colorscale = "Viridis")
+      marker = list(size = 10),
+      text = create_labels(baza_danych, input$wybor_x, input$wybor_y, input$wybor_z, input$kolor),
+      hoverinfo = "text"
+    ) %>% layout(
+      scene = list(
+        xaxis = list(title = input$wybor_x),
+        yaxis = list(title = input$wybor_y),
+        zaxis = list(title = input$wybor_z)
+      )
     )
+    
+    # Rejestrowanie zdarzenia kliknięcia
+    event_register(p, "plotly_click")
+    
+    p
   })
   
-  # Reakcja na kliknięcie punktu
-  observeEvent(event_data("plotly_click", source = "wykres_3d"), {
-    punkt_klikniety <- event_data("plotly_click", source = "wykres_3d")$pointNumber + 1
-    dane_interaktywne(dane_3d[punkt_klikniety, , drop = FALSE])
-  })
-  
-  # Wyświetlanie tabeli z danymi punktu
-  output$tabela_danych <- renderDT({
-    dane_interaktywne()
+  # Obsługa zdarzenia kliknięcia na punkcie
+  observeEvent(event_data("plotly_click"), {
+    # Pobieranie informacji o punkcie
+    punkt_info <- event_data("plotly_click")
+    
+    # Wyświetlanie specyfikacji w jednej kolumnie
+    output$tabela_specyfikacja <- renderUI({
+      specyfikacja <- tibble::tibble(
+        Kolumna1 = baza_danych[punkt_info$pointNumber, "Kolumna1"],
+        Kolumna2 = baza_danych[punkt_info$pointNumber, "Kolumna2"],
+        Kolumna3 = baza_danych[punkt_info$pointNumber, "Kolumna3"],
+        Kolumna4 = baza_danych[punkt_info$pointNumber, "Kolumna4"],
+        Kolumna5 = baza_danych[punkt_info$pointNumber, "Kolumna5"],
+        Kolumna6 = baza_danych[punkt_info$pointNumber, "Kolumna6"]
+      )
+      
+      # Formatowanie specyfikacji do postaci jednej kolumny
+      specyfikacja_long <- tidyr::gather(specyfikacja, key = "Klucz", value = "Wartość")
+      specyfikacja_text <- paste0(specyfikacja_long$Klucz, ": ", specyfikacja_long$Wartość, "<br>")
+      
+      # Zwracanie wygenerowanego tekstu HTML
+      HTML(specyfikacja_text)
+    })
   })
 }
 
