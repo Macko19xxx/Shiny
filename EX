@@ -1,0 +1,56 @@
+priceCalculator <- function(hours, pph = 40){
+ net.price <- hours * pph
+ round(net.price)
+}
+
+> priceCalculator(hours = 55)
+[1] 2200
+> priceCalculator(hours = 110)
+[1] 3960
+
+if(hours > 100) net.price <- net.price * 0.9
+
+riceCalculator <- function(hours, pph = 40, public = TRUE){
+ net.price <- hours * pph
+ if(hours > 100) net.price <- net.price * 0.9
+ if(public) {
+ tot.price <- net.price * 1.06
+ } else {
+ tot.price <- net.price * 1.12
+ }
+ round(tot.price)
+}
+
+if(public) tot.price <- net.price * 1.06 else
+ tot.price <- net.price * 1.12
+
+if(client == "private"){
+ tot.price <- net.price * 1.12
+} else if(client == "public"){
+ tot.price <- net.price * 1.06
+} else {
+ tot.price <- net.price
+}
+
+tot.price <- net.price * 
+ if(client == "private") 1.12 else 
+ if(client == "public") 1.06 else 1
+
+ VAT <- ifelse(client == "private", 1.12,
+ ifelse(client == "public", 1.06, 1)
+ )
+tot.price <- net.price * VAT
+
+priceCalculator <- function(hours, pph = 40, client){
+ net.price <- hours * pph *
+ ifelse(hours > 100, 0.9, 1)
+ VAT <- numeric(0)
+ for(i in client){
+ VAT <- c(VAT, switch(i, private = 1.12, public = 1.06, 1))
+ }
+ tot.price <- net.price * VAT
+ round(tot.price)
+}
+
+
+ 
